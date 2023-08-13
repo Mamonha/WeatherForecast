@@ -6,7 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"weather/controllers/models/api"
+	"weather/models/api"
 )
 
 func GetWeatherData() api.WeatherData {
