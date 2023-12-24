@@ -6,35 +6,45 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"weather/models/api"
+
+	"github.com/joho/godotenv"
 )
 
-func GetWeatherData() api.WeatherData {
-	apiKey := "915bc9171eddaec8223211d99469e0b0"
-	lon := "-25.503212"
-	lat := "-54.572352"
-
-	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?lat=%s&lon=%s&appid=%s", lat, lon, apiKey)
-
-	response, err := http.Get(url)
-	body, err := io.ReadAll(response.Body)
-
+func GetWeatherData(w http.ResponseWriter, r *http.Request) {
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	var data api.WeatherData
+	apiKey := os.Getenv("API_KEY")
+	endpoint := os.Getenv("URL_LOCATION")
+	lon := "-25.503212"
+	lat := "-54.572352"
+	url := fmt.Sprintf(endpoint, lat, lon, apiKey)
 
-	err2 := json.Unmarshal(body, &data)
+	response, err := http.Get(url)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer response.Body.Close()
 
-	if err2 != nil {
-		log.Fatal(err2)
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	return data
+	var data api.WeatherData
+	err = json.Unmarshal(body, &data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-}
+	w.Header().Set("Content-Type", "application/json")
 
-func ValidateData(data *api.WeatherData) {
-
+	json.NewEncoder(w).Encode(data)
 }
