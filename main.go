@@ -1,10 +1,11 @@
 package main
 
 import (
+	"net/http"
 	"weather/controllers"
 )
 
 func main() {
-	controllers.GetWeatherData()
-	controllers.ValidateData()
+	http.HandleFunc("/location", controllers.GetWeatherData)
+	http.ListenAndServe(":8080", nil)
 }
